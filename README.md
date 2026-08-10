@@ -16,7 +16,15 @@ Aplicación de línea de comandos escrita en Python para gestionar tareas. Permi
 ## Requisitos
 
 - Python 3.7 o superior
-- Dependencias opcionales según la implementación (por ejemplo: `notify2`, `plyer`, `win10toast`, etc.). Comprueba `requirements.txt` si existe.
+- Las dependencias recomendadas están listadas en `requirements.txt` (incluye librerías de notificaciones y utilidades).
+
+Dependencias incluidas en `requirements.txt` (ejemplos):
+
+- notify2 (Linux)
+- plyer (multiplataforma)
+- win10toast (Windows)
+- click (CLI helpers)
+- python-dateutil (manejo de fechas)
 
 ## Instalación
 
@@ -31,7 +39,7 @@ Aplicación de línea de comandos escrita en Python para gestionar tareas. Permi
    source .venv/bin/activate  # Linux/macOS
    .venv\Scripts\activate    # Windows
 
-3. Instala dependencias si existen:
+3. Instala dependencias desde `requirements.txt`:
 
    pip install -r requirements.txt
 
