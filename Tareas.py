@@ -1,5 +1,4 @@
 import sqlite3
-import pandas as pd
 import os, threading, time, datetime, ctypes, pystray, sys
 from winotify import Notification, audio
 from PIL import Image
@@ -16,8 +15,11 @@ consola = kernel32.GetConsoleWindow()
 
 MOSTRAR_CONSOLA = 5
 OCULTAR_CONSOLA = 0
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-ruta_final = os.path.dirname(os.path.abspath(__file__))+"\\Recordatorio.db"
+icon_path = os.path.join(BASE_DIR,"notificacion.ico")
+icon = None
+ruta_final = os.path.join(BASE_DIR,"Recordatorio.db")
 #Tareas Enteras
 QUERY_SELECCIONAR = "SELECT * FROM Task"
 #Busca Tarea Por ID
@@ -29,7 +31,7 @@ QUERY_AÑADIR = "INSERT INTO Task (Name,Date,Notified) Values (?,?,0)"
 #Verificar Tareas
 QUERY_VERIFICAR = "SELECT * FROM Task WHERE Date <= datetime('now','localtime') AND Notified = 0"
 #Modificar Si Ya Fue Avisada
-QUERY_ACTUALIZAR = "UPDATE Task SET Notified = 1 WHERE Date <= ?"
+QUERY_ACTUALIZAR = "UPDATE Task SET Notified = 1 WHERE TaskID = ?"
 #Crear La Tabla Principal ("Task")
 QUERY_CREAR_TABLA = """CREATE TABLE "Task" (
 	"TaskID"	INTEGER,
@@ -41,8 +43,6 @@ QUERY_CREAR_TABLA = """CREATE TABLE "Task" (
 #Vaciando La Tabla Principal ("Task")
 QUERY_VACIAR_TABLA = "DELETE FROM Task"
 QUERY_VACIAR_CONTADOR = "DELETE FROM sqlite_sequence WHERE name = 'Task'"
-
-icon = None
 
 class Regresar(Exception):
   pass
@@ -70,7 +70,7 @@ def salir_total(icon):
 def mostrar_icono():
   global icon
   user32.ShowWindow(consola,OCULTAR_CONSOLA)
-  image=Image.open(os.path.dirname(os.path.abspath(__file__))+"\\notificacion.ico")
+  image=Image.open(icon_path)
   menu = pystray.Menu(
     pystray.MenuItem("Abrir Programa",mostrar_consola),
     pystray.MenuItem("Cerrar Programa",salir_total)
@@ -89,7 +89,7 @@ def pedir_input(nombre_input):
 class ListaDeTareas():
   def buscar_tarea(self, tarea_a_buscar):
     with sqlite3.connect(ruta_final) as conn:
-      return pd.read_sql_query(QUERY_BUSCAR,conn,params=[tarea_a_buscar])
+      return conn.cursor().execute(QUERY_BUSCAR,[tarea_a_buscar]).fetchall()
   
   def añadir_tarea(self, tarea_a_añadir, fecha):
     try:
@@ -107,13 +107,13 @@ class ListaDeTareas():
         
   def ver_tareas(self):
     with sqlite3.connect(ruta_final) as conn:
-      tareas_enteras = pd.read_sql_query(QUERY_SELECCIONAR,conn)
+      tareas_enteras = conn.cursor().execute(QUERY_SELECCIONAR).fetchall()
     return tareas_enteras
 
   def eliminar_tarea(self, tarea_eliminada):
     try:
       with sqlite3.connect(ruta_final, timeout=2) as conn:
-        conn.cursor().execute(QUERY_ELIMINAR,(str(tarea_eliminada.iloc[0,0]),))
+        conn.cursor().execute(QUERY_ELIMINAR,(str(tarea_eliminada[0][0]),))
         conn.commit()
         return True
     except sqlite3.OperationalError as e:
@@ -130,22 +130,24 @@ evento_parar = threading.Event()
 def notificar(evento_parar):
   while not evento_parar.is_set():
     with sqlite3.connect(ruta_final) as conn:
-      tareas_a_notificar = pd.read_sql_query(QUERY_VERIFICAR,conn)
-      for indice,tarea_a_mostrar in tareas_a_notificar.iterrows():
+      tareas_a_notificar = conn.cursor().execute(QUERY_VERIFICAR).fetchall()
+      for tarea_a_mostrar in tareas_a_notificar:
         notificacion_instancia = Notification(
-          app_id=tarea_a_mostrar["TaskID"],
-          title=tarea_a_mostrar["Name"],
+          app_id="Lista De Tareas",
+          title=tarea_a_mostrar[1],
           msg="Tienes Esta Tarea Pendiente",
-          icon=os.path.dirname(os.path.abspath(__file__))+"\\notificacion.ico"
+          icon=icon_path
         )
         notificacion_instancia.set_audio(audio.Reminder,False)
-        notificacion_instancia.show()
         try:
-          conn.cursor().execute("UPDATE Task SET Notified = 1 WHERE TaskID = ?",(tarea_a_mostrar["TaskID"],))
+          notificacion_instancia.show()
+          conn.cursor().execute(QUERY_ACTUALIZAR,(str(tarea_a_mostrar[0]),))
           conn.commit()
         except sqlite3.OperationalError as e:
           if "locked" in str(e).lower():
             print("\nBase De Datos Bloqueada")
+        except Exception as e:
+          print("Ha Ocurrido Un Error Inesperado: "+e)
         time.sleep(5)
     time.sleep(60)
 
@@ -184,17 +186,18 @@ while True:
           break
     
     elif opcion_elegida == "2":
-      for indice,item in lista_de_tareas.ver_tareas().iterrows():
-        print(f"\n{item["TaskID"]}, {item["Name"]}, {item["Date"]}, {"Si" if item["Notified"] == 1 else "No"}")
-    
+      for tarea in lista_de_tareas.ver_tareas():
+        print(f"\n{tarea[0]}, {tarea[1]}, {tarea[2]}, {"Si" if tarea[3] == 1 else "No"}")
+
     elif opcion_elegida == "3":
       tarea_a_eliminar = pedir_input("\nID De La Tarea A Eliminar: ")
       tarea_eliminada = lista_de_tareas.buscar_tarea(tarea_a_eliminar)
-      if tarea_eliminada.empty:
+      print(tarea_eliminada)
+      if tarea_eliminada == []:
         print("\nTarea No Encontrada")  
         continue
       else:
-        print("\nTarea Seleccionada: "+tarea_eliminada.loc[0,"Name"])
+        print("\nTarea Seleccionada: "+tarea_eliminada[0][1])
         confirmacion = input("\n¿Seguro que deseas elminar esta Tarea? (y): ")
         if not confirmacion.isalpha():
           print("\nTarea No Eliminada")
