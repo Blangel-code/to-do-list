@@ -1,5 +1,7 @@
 # to-do-list
 
+Archivo: requirements.txt incluido en la raíz del proyecto.
+
 Una lista de tareas que funciona mediante consola, se ejecuta en segundo plano y envía notificaciones al escritorio.
 
 ## Descripción
@@ -15,15 +17,14 @@ Aplicación de línea de comandos escrita en Python para gestionar tareas. Permi
 
 ## Requisitos
 
-- Python 3.7 o superior
-- Las dependencias recomendadas están listadas en `requirements.txt` (incluye librerías de notificaciones y utilidades).
+- Python 3.7 o superior.
+- El repositorio incluye un archivo `requirements.txt` en la raíz con las dependencias necesarias para notificaciones y utilidades. Asegúrate de revisar ese archivo antes de la instalación.
 
-Dependencias incluidas en `requirements.txt` (ejemplos):
-
+Dependencias listadas en `requirements.txt`:
 - notify2 (Linux)
 - plyer (multiplataforma)
 - win10toast (Windows)
-- click (CLI helpers)
+- click (helpers para CLI)
 - python-dateutil (manejo de fechas)
 
 ## Instalación
@@ -39,9 +40,11 @@ Dependencias incluidas en `requirements.txt` (ejemplos):
    source .venv/bin/activate  # Linux/macOS
    .venv\Scripts\activate    # Windows
 
-3. Instala dependencias desde `requirements.txt`:
+3. Instala las dependencias desde el archivo `requirements.txt` que se encuentra en la raíz del proyecto:
 
    pip install -r requirements.txt
+
+Si por alguna razón necesitas instalar solo dependencias específicas, abre `requirements.txt` y usa `pip install <paquete>` para instalarlas individualmente.
 
 ## Uso
 
