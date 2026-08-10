@@ -30,14 +30,17 @@ QUERY_AÑADIR = "INSERT INTO Task (Name,Date,Notified) Values (?,?,0)"
 QUERY_VERIFICAR = "SELECT * FROM Task WHERE Date <= datetime('now','localtime') AND Notified = 0"
 #Modificar Si Ya Fue Avisada
 QUERY_ACTUALIZAR = "UPDATE Task SET Notified = 1 WHERE Date <= ?"
-#Crear La Tabla Principal ("datos")
-QUERY_CREAR = """CREATE TABLE "Task" (
+#Crear La Tabla Principal ("Task")
+QUERY_CREAR_TABLA = """CREATE TABLE "Task" (
 	"TaskID"	INTEGER,
 	"Name"	TEXT,
 	"Date"	TEXT,
 	"Notified"	INTEGER,
 	PRIMARY KEY("TaskID" AUTOINCREMENT)
 );"""
+#Vaciando La Tabla Principal ("Task")
+QUERY_VACIAR_TABLA = "DELETE FROM Task"
+QUERY_VACIAR_CONTADOR = "DELETE FROM sqlite_sequence WHERE name = 'Task'"
 
 icon = None
 
@@ -50,7 +53,7 @@ def crear_tabla():
       conn.cursor().execute("SELECT Name FROM Task LIMIT 1")
     except Exception as e:
       if str(e) == "no such table: Task":
-        conn.cursor().execute(QUERY_CREAR)
+        conn.cursor().execute(QUERY_CREAR_TABLA)
         conn.commit()
       else:
         print(f"Ocurrió Un Error Inesperado Al Intentar Crear La Tabla ({e})")
@@ -159,6 +162,7 @@ while True:
   print("1) Añadir Tarea")
   print("2) Ver Tareas Pendientes")
   print("3) Eliminar Tarea")
+  print("4) Vaciar Base De Datos")
   
   opcion_elegida = input("\nSelecciona Que Quieres Hacer: ")
   try:
@@ -178,9 +182,11 @@ while True:
         if lista_de_tareas.añadir_tarea(tarea_añadir, fecha_añadir):
           print("\nTarea Añadida Con Exito")
           break
+    
     elif opcion_elegida == "2":
       for indice,item in lista_de_tareas.ver_tareas().iterrows():
         print(f"\n{item["TaskID"]}, {item["Name"]}, {item["Date"]}, {"Si" if item["Notified"] == 1 else "No"}")
+    
     elif opcion_elegida == "3":
       tarea_a_eliminar = pedir_input("\nID De La Tarea A Eliminar: ")
       tarea_eliminada = lista_de_tareas.buscar_tarea(tarea_a_eliminar)
@@ -200,6 +206,16 @@ while True:
           print("\nTarea Eliminada Con Exito")
         else:
           print("No Se Pudo Eliminar La Tarea, Intentelo Más Tarde")
+
+    elif opcion_elegida == "4":
+      try:
+        with sqlite3.connect(ruta_final) as conn:
+          conn.cursor().execute(QUERY_VACIAR_TABLA)
+          conn.cursor().execute(QUERY_VACIAR_CONTADOR)
+          conn.commit()
+      except Exception as e:
+        print(f"Ha Ocurrido El Error: {e}")
+
     elif opcion_elegida == "0" or opcion_elegida == "salir":
       mostrar_icono()
       continue
