@@ -19,22 +19,41 @@ OCULTAR_CONSOLA = 0
 
 ruta_final = os.path.dirname(os.path.abspath(__file__))+"\\Recordatorio.db"
 #Tareas Enteras
-query_selecionar = "SELECT * FROM Task"
+QUERY_SELECCIONAR = "SELECT * FROM Task"
 #Busca Tarea Por ID
-query_buscar = "SELECT * FROM Task WHERE TaskID = ?"
+QUERY_BUSCAR = "SELECT * FROM Task WHERE TaskID = ?"
 #Eliminar Tarea Por ID
-query_eliminar = "DELETE FROM Task WHERE TaskID = ?"
+QUERY_ELIMINAR = "DELETE FROM Task WHERE TaskID = ?"
 #Añadir Tarea A La Tabla
-query_añadir = "INSERT INTO Task (Name,Date,Notified) Values (?,?,0)"
+QUERY_AÑADIR = "INSERT INTO Task (Name,Date,Notified) Values (?,?,0)"
 #Verificar Tareas
-query_verificar = "SELECT * FROM Task WHERE Date <= datetime('now','localtime') AND Notified = 0"
+QUERY_VERIFICAR = "SELECT * FROM Task WHERE Date <= datetime('now','localtime') AND Notified = 0"
 #Modificar Si Ya Fue Avisada
-query_actualizar = "UPDATE Task SET Notified = 1 WHERE Date <= ?"
+QUERY_ACTUALIZAR = "UPDATE Task SET Notified = 1 WHERE Date <= ?"
+#Crear La Tabla Principal ("datos")
+QUERY_CREAR = """CREATE TABLE "Task" (
+	"TaskID"	INTEGER,
+	"Name"	TEXT,
+	"Date"	TEXT,
+	"Notified"	INTEGER,
+	PRIMARY KEY("TaskID" AUTOINCREMENT)
+);"""
 
 icon = None
 
 class Regresar(Exception):
   pass
+
+def crear_tabla():
+  with sqlite3.connect(ruta_final) as conn:
+    try:
+      conn.cursor().execute("SELECT Name FROM Task LIMIT 1")
+    except Exception as e:
+      if str(e) == "no such table: Task":
+        conn.cursor().execute(QUERY_CREAR)
+        conn.commit()
+      else:
+        print(f"Ocurrió Un Error Inesperado Al Intentar Crear La Tabla ({e})")
 
 def mostrar_consola(icon):
   user32.ShowWindow(consola,MOSTRAR_CONSOLA)
@@ -67,12 +86,12 @@ def pedir_input(nombre_input):
 class ListaDeTareas():
   def buscar_tarea(self, tarea_a_buscar):
     with sqlite3.connect(ruta_final) as conn:
-      return pd.read_sql_query(query_buscar,conn,params=[tarea_a_buscar])
+      return pd.read_sql_query(QUERY_BUSCAR,conn,params=[tarea_a_buscar])
   
   def añadir_tarea(self, tarea_a_añadir, fecha):
     try:
       with sqlite3.connect(ruta_final, timeout=2) as conn:
-        conn.cursor().execute(query_añadir,(tarea_a_añadir.title(),fecha))
+        conn.cursor().execute(QUERY_AÑADIR,(tarea_a_añadir.title(),fecha))
         conn.commit()
         return True
     except sqlite3.OperationalError as e:
@@ -85,13 +104,13 @@ class ListaDeTareas():
         
   def ver_tareas(self):
     with sqlite3.connect(ruta_final) as conn:
-      tareas_enteras = pd.read_sql_query(query_selecionar,conn)
+      tareas_enteras = pd.read_sql_query(QUERY_SELECCIONAR,conn)
     return tareas_enteras
 
   def eliminar_tarea(self, tarea_eliminada):
     try:
       with sqlite3.connect(ruta_final, timeout=2) as conn:
-        conn.cursor().execute(query_eliminar,(str(tarea_eliminada.iloc[0,0]),))
+        conn.cursor().execute(QUERY_ELIMINAR,(str(tarea_eliminada.iloc[0,0]),))
         conn.commit()
         return True
     except sqlite3.OperationalError as e:
@@ -108,7 +127,7 @@ evento_parar = threading.Event()
 def notificar(evento_parar):
   while not evento_parar.is_set():
     with sqlite3.connect(ruta_final) as conn:
-      tareas_a_notificar = pd.read_sql_query(query_verificar,conn)
+      tareas_a_notificar = pd.read_sql_query(QUERY_VERIFICAR,conn)
       for indice,tarea_a_mostrar in tareas_a_notificar.iterrows():
         notificacion_instancia = Notification(
           app_id=tarea_a_mostrar["TaskID"],
@@ -126,6 +145,8 @@ def notificar(evento_parar):
             print("\nBase De Datos Bloqueada")
         time.sleep(5)
     time.sleep(60)
+
+crear_tabla()
 
 hilo_notificar = threading.Thread(target=notificar,daemon=True,args=(evento_parar,))
 if not hilo_notificar.is_alive():
