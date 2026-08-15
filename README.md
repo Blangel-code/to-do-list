@@ -14,6 +14,7 @@ Aplicación de línea de comandos escrita en Python para gestionar tareas. Permi
 - Ejecución en segundo plano para monitorizar tareas continuamente.
 - Notificaciones de escritorio para avisos y recordatorios.
 - Almacenamiento simple (archivo local o base de datos ligera); revisa el código para detalles sobre persistencia.
+- Para salir de la aplición escribir en la "salir" en la línea de comandos
 
 ## Requisitos
 
@@ -52,11 +53,7 @@ Ejecuta la aplicación desde la terminal. La forma exacta de uso depende del CLI
 
 - Ejecutar en primer plano:
 
-  python main.py
-
-- Ejecutar en segundo plano (Linux/macOS):
-
-  nohup python main.py &
+  python Tareas.py
 
 Para un uso en producción considera crear un servicio systemd (Linux) o una tarea programada/servicio en Windows.
 
@@ -71,14 +68,6 @@ La aplicación envía notificaciones cuando hay eventos relevantes (nueva tarea,
 - En Windows: `win10toast` o `plyer`.
 
 Asegúrate de tener instaladas las dependencias necesarias según tu sistema operativo.
-
-## Configuración
-
-Configura en el código o en archivos de configuración:
-
-- Intervalos de comprobación (cada cuánto se revisan las tareas).
-- Ruta de almacenamiento de datos.
-- Opciones de notificación (activar/desactivar, sonidos, niveles de prioridad).
 
 ## Contribuir
 
