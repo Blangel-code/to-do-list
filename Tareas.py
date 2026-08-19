@@ -192,7 +192,6 @@ while True:
     elif opcion_elegida == "3":
       tarea_a_eliminar = pedir_input("\nID De La Tarea A Eliminar: ")
       tarea_eliminada = lista_de_tareas.buscar_tarea(tarea_a_eliminar)
-      print(tarea_eliminada)
       if tarea_eliminada == []:
         print("\nTarea No Encontrada")  
         continue
