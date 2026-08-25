@@ -3,6 +3,7 @@ import os, threading, time, datetime, ctypes, pystray, sys
 from winotify import Notification, audio
 from PIL import Image
 from subprocess import Popen
+import querys as q
 
 if os.name == 'nt' and "conhost.exe" not in os.popen('tasklist /FI "PID eq %d"' % os.getppid()).read():
   Popen(["Conhost.exe", sys.executable] + sys.argv)
@@ -20,29 +21,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 icon_path = os.path.join(BASE_DIR,"notificacion.ico")
 icon = None
 ruta_final = os.path.join(BASE_DIR,"Recordatorio.db")
-#Tareas Enteras
-QUERY_SELECCIONAR = "SELECT * FROM Task"
-#Busca Tarea Por ID
-QUERY_BUSCAR = "SELECT * FROM Task WHERE TaskID = ?"
-#Eliminar Tarea Por ID
-QUERY_ELIMINAR = "DELETE FROM Task WHERE TaskID = ?"
-#Añadir Tarea A La Tabla
-QUERY_AÑADIR = "INSERT INTO Task (Name,Date,Notified) Values (?,?,0)"
-#Verificar Tareas
-QUERY_VERIFICAR = "SELECT * FROM Task WHERE Date <= datetime('now','localtime') AND Notified = 0"
-#Modificar Si Ya Fue Avisada
-QUERY_ACTUALIZAR = "UPDATE Task SET Notified = 1 WHERE TaskID = ?"
-#Crear La Tabla Principal ("Task")
-QUERY_CREAR_TABLA = """CREATE TABLE "Task" (
-	"TaskID"	INTEGER,
-	"Name"	TEXT,
-	"Date"	TEXT,
-	"Notified"	INTEGER,
-	PRIMARY KEY("TaskID" AUTOINCREMENT)
-);"""
-#Vaciando La Tabla Principal ("Task")
-QUERY_VACIAR_TABLA = "DELETE FROM Task"
-QUERY_VACIAR_CONTADOR = "DELETE FROM sqlite_sequence WHERE name = 'Task'"
 
 class Regresar(Exception):
   pass
@@ -53,7 +31,7 @@ def crear_tabla():
       conn.cursor().execute("SELECT Name FROM Task LIMIT 1")
     except Exception as e:
       if str(e) == "no such table: Task":
-        conn.cursor().execute(QUERY_CREAR_TABLA)
+        conn.cursor().execute(q.QUERY_CREAR_TABLA)
         conn.commit()
       else:
         print(f"Ocurrió Un Error Inesperado Al Intentar Crear La Tabla ({e})")
@@ -89,12 +67,12 @@ def pedir_input(nombre_input):
 class ListaDeTareas():
   def buscar_tarea(self, tarea_a_buscar):
     with sqlite3.connect(ruta_final) as conn:
-      return conn.cursor().execute(QUERY_BUSCAR,[tarea_a_buscar]).fetchall()
+      return conn.cursor().execute(q.QUERY_BUSCAR,[tarea_a_buscar]).fetchall()
   
   def añadir_tarea(self, tarea_a_añadir, fecha):
     try:
       with sqlite3.connect(ruta_final, timeout=2) as conn:
-        conn.cursor().execute(QUERY_AÑADIR,(tarea_a_añadir.title(),fecha))
+        conn.cursor().execute(q.QUERY_AÑADIR,(tarea_a_añadir.title(),fecha))
         conn.commit()
         return True
     except sqlite3.OperationalError as e:
@@ -107,13 +85,13 @@ class ListaDeTareas():
         
   def ver_tareas(self):
     with sqlite3.connect(ruta_final) as conn:
-      tareas_enteras = conn.cursor().execute(QUERY_SELECCIONAR).fetchall()
+      tareas_enteras = conn.cursor().execute(q.QUERY_SELECCIONAR).fetchall()
     return tareas_enteras
 
   def eliminar_tarea(self, tarea_eliminada):
     try:
       with sqlite3.connect(ruta_final, timeout=2) as conn:
-        conn.cursor().execute(QUERY_ELIMINAR,(str(tarea_eliminada[0][0]),))
+        conn.cursor().execute(q.QUERY_ELIMINAR,(str(tarea_eliminada[0][0]),))
         conn.commit()
         return True
     except sqlite3.OperationalError as e:
@@ -130,7 +108,7 @@ evento_parar = threading.Event()
 def notificar(evento_parar):
   while not evento_parar.is_set():
     with sqlite3.connect(ruta_final) as conn:
-      tareas_a_notificar = conn.cursor().execute(QUERY_VERIFICAR).fetchall()
+      tareas_a_notificar = conn.cursor().execute(q.QUERY_VERIFICAR).fetchall()
       for tarea_a_mostrar in tareas_a_notificar:
         notificacion_instancia = Notification(
           app_id="Lista De Tareas",
@@ -141,7 +119,7 @@ def notificar(evento_parar):
         notificacion_instancia.set_audio(audio.Reminder,False)
         try:
           notificacion_instancia.show()
-          conn.cursor().execute(QUERY_ACTUALIZAR,(str(tarea_a_mostrar[0]),))
+          conn.cursor().execute(q.QUERY_ACTUALIZAR,(str(tarea_a_mostrar[0]),))
           conn.commit()
         except sqlite3.OperationalError as e:
           if "locked" in str(e).lower():
@@ -212,8 +190,8 @@ while True:
     elif opcion_elegida == "4":
       try:
         with sqlite3.connect(ruta_final) as conn:
-          conn.cursor().execute(QUERY_VACIAR_TABLA)
-          conn.cursor().execute(QUERY_VACIAR_CONTADOR)
+          conn.cursor().execute(q.QUERY_VACIAR_TABLA)
+          conn.cursor().execute(q.QUERY_VACIAR_CONTADOR)
           conn.commit()
       except Exception as e:
         print(f"Ha Ocurrido El Error: {e}")
