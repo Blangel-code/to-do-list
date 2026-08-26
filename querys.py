@@ -11,13 +11,14 @@ QUERY_VERIFICAR = "SELECT * FROM Task WHERE Date <= datetime('now','localtime') 
 #Modificar Si Ya Fue Avisada
 QUERY_ACTUALIZAR = "UPDATE Task SET Notified = 1 WHERE TaskID = ?"
 #Crear La Tabla Principal ("Task")
-QUERY_CREAR_TABLA = """CREATE TABLE "Task" (
+QUERY_CREAR_TABLA = """CREATE TABLE IF NOT EXISTS Task (
 	"TaskID"	INTEGER,
 	"Name"	TEXT,
 	"Date"	TEXT,
 	"Notified"	INTEGER,
 	PRIMARY KEY("TaskID" AUTOINCREMENT)
 );"""
+#Querys Inutilizadas
 #Vaciando La Tabla Principal ("Task")
 QUERY_VACIAR_TABLA = "DELETE FROM Task"
 QUERY_VACIAR_CONTADOR = "DELETE FROM sqlite_sequence WHERE name = 'Task'"

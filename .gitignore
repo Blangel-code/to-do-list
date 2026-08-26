@@ -1,2 +1,4 @@
 #Ignorando la tabla de datos
 Recordatorio.db
+
+__pycache__
