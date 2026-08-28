@@ -1,4 +1,5 @@
 import flet as ft
+import datetime
 
 class ToDoListApp:
     def __init__(self,page:ft.Page):
@@ -44,7 +45,7 @@ class ToDoListApp:
                 shape=ft.RoundedRectangleBorder(radius=10),
                 side=ft.BorderSide(color="#1a5553"),
             ),
-            on_click=lambda _: print("Hola"),
+            on_click=lambda _: self.page.show_dialog(self.menu_add_task),
         )
         
         self.search_bar = ft.TextField(
@@ -117,6 +118,36 @@ class ToDoListApp:
         self.task_detail_taskid = ft.Text("• TaskID",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)
         self.task_detail_title = ft.Text("• Title Task",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)
         self.task_detail_date = ft.Text("• 12:30 01/01/26",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)
+
+        self.add_task_label_date= ft.Text("• 12:30 01/01/26",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)        
+        self.add_task_name = ft.TextField(
+            label="Nombre De La Tarea",
+            focused_border_color="#1a5553",
+            bgcolor="#29363F",
+            label_style=ft.TextStyle(color="#88ABD4",weight=ft.FontWeight.BOLD),
+            text_style=ft.TextStyle(color="#88ABD4",weight=ft.FontWeight.BOLD),
+            border_radius=15,
+            height= 46,
+            border_color="#268a87",
+        )
+        self.add_task_date = ft.DatePicker(
+            first_date=datetime.datetime.today(),
+            help_text="Ingresa Una Fecha",
+            field_hint_text="12/31/2026",
+            cancel_text="Cancelar",
+            confirm_text="Aceptar",
+            field_label_text="Fecha De La Tarea",
+            error_invalid_text="Esta Fecha Ya Ha Pasado",
+            error_format_text="Formato De Fecha Ivalido",
+            )
+        self.add_task_time = ft.TimePicker(
+            help_text="Ingresa Una Hora",
+            cancel_text="Cancelar",
+            confirm_text="Aceptar",
+            error_invalid_text="Coloca Una Hora Valida",
+            hour_label_text="Hora(s)",
+            minute_label_text="Minuto(s)"
+            )
         
         self.btn_complete_task = ft.Button(
             ft.Row([
@@ -160,7 +191,6 @@ class ToDoListApp:
             )
         )
 
-
     def _second_plane_app(self):
         #TERMINAR FUNCIONALIDAD 
         print("Segundo Plano")
@@ -180,10 +210,82 @@ class ToDoListApp:
 
     def _create_ui(self):
         
+        self.menu_add_task = ft.AlertDialog(
+            ft.Column(
+                [
+                    ft.Divider(color="#0DA98C",radius=10,thickness=2),
+                    self.add_task_name,
+                    ft.Button(
+                        ft.Row([
+                            ft.Text("Fecha A Avisar",color="#88ABD4",size=15,weight=ft.FontWeight.BOLD),
+                            ft.Icon(ft.Icons.CALENDAR_TODAY_ROUNDED,ft.Colors.BLUE_300)
+                        ],alignment=ft.MainAxisAlignment.CENTER),
+                        width = 250,
+                        bgcolor="#29363F",
+                        style=ft.ButtonStyle(
+                            overlay_color={ft.ControlState.PRESSED:"#2B456C"},
+                            shape=ft.RoundedRectangleBorder(radius=10),
+                            side=ft.BorderSide(color="#1a5553"),
+                        ),
+                        on_click=lambda:self.page.show_dialog(self.add_task_date),
+                    ),
+                    ft.Button(
+                        ft.Row([
+                            ft.Text("Hora A Avisar",color="#88ABD4",size=15,weight=ft.FontWeight.BOLD),
+                            ft.Icon(ft.Icons.SCHEDULE_ROUNDED,ft.Colors.BLUE_300)
+                        ],alignment=ft.MainAxisAlignment.CENTER),
+                        width = 250,
+                        bgcolor="#29363F",
+                        style=ft.ButtonStyle(
+                            overlay_color={ft.ControlState.PRESSED:"#2B456C"},
+                            shape=ft.RoundedRectangleBorder(radius=10),
+                            side=ft.BorderSide(color="#1a5553"),
+                        ),
+                        on_click=lambda:self.page.show_dialog(self.add_task_time),
+                    ),
+                    self.add_task_label_date,
+                    ft.Divider(color="#0DA98C",radius=10,thickness=2),
+                    ft.Row(
+                        [
+                            ft.Button(  
+                                ft.Row([
+                                    ft.Text("Aceptar",color="#88ABD4",size=15,weight=ft.FontWeight.BOLD),
+                                    ft.Icon(ft.Icons.CHECK_BOX_ROUNDED,ft.Colors.BLUE_300)
+                                ],alignment=ft.MainAxisAlignment.CENTER),
+                                style=ft.ButtonStyle(
+                                    overlay_color={ft.ControlState.PRESSED:"#2B456C"},
+                                    shape=ft.RoundedRectangleBorder(radius=10),
+                                    side=ft.BorderSide(color="#1a5553"),
+                                ),
+                            ),
+                            ft.Button(  
+                                ft.Row([
+                                    ft.Text("Cancelar",color="#88ABD4",size=15,weight=ft.FontWeight.BOLD),
+                                    ft.Icon(ft.Icons.DELETE_SWEEP_ROUNDED,ft.Colors.BLUE_300)
+                                ],alignment=ft.MainAxisAlignment.CENTER),
+                                style=ft.ButtonStyle(
+                                    overlay_color={ft.ControlState.PRESSED:"#2B456C"},
+                                    shape=ft.RoundedRectangleBorder(radius=10),
+                                    side=ft.BorderSide(color="#1a5553"),
+                                ),
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN   
+                    ),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                height=255,
+            ),
+        alignment=ft.Alignment.TOP_LEFT,
+        actions_alignment=ft.MainAxisAlignment.CENTER,
+        title=ft.Text("Crear Una Nueva Tarea",weight=ft.FontWeight.BOLD,color="#88ABD4",size=19,style=(ft.TextStyle(decoration=ft.TextDecoration.UNDERLINE,decoration_color="#268a87",))),
+        title_padding=ft.Padding(left=74,top=27,bottom=3),
+        )
+        
         task_view_card_title = ft.Container(
             ft.Row([
                 ft.Icon(ft.Icons.ASSIGNMENT_ROUNDED,color=ft.Colors.BLUE_300),
-                ft.Text("TAREAS",color="#88ABD4",weight=ft.FontWeight.BOLD,style=ft.TextStyle(decoration=ft.TextDecoration.UNDERLINE)),
+                ft.Text("TAREAS",color="#88ABD4",weight=ft.FontWeight.BOLD,style=ft.TextStyle(decoration=ft.TextDecoration.UNDERLINE,)),
                 ]
             ),
         )
