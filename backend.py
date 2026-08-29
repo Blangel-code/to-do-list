@@ -4,7 +4,7 @@ from winotify import Notification, audio
 from time import sleep
 from PIL import Image
 
-class ListaDeTareas:
+class ToDoList:
     def __init__(self):
         self.path_base = Path(__file__).resolve().parent
         self.path_db = self.path_base / "data" / "data.db"
@@ -21,7 +21,7 @@ class ListaDeTareas:
         conn = sqlite3.connect(self.path_db)
         try:
             cursor = conn.cursor()
-            cursor.execute(query,parameters)
+            cursor.execute(query,parameters) if parameters else cursor.execute(query)
             if fetch:
                 return cursor.fetchall()
             conn.commit()
@@ -64,17 +64,14 @@ class ListaDeTareas:
     def close_app(self):
         pass
         
-    def buscar_tarea(self,ID_task_to_search:int):
-        return self._make_cursor(q.QUERY_BUSCAR,(ID_task_to_search,),True)
+    def buscar_tarea(self,ID_task_to_search:int,name_task_to_search:str,filter_check:None,filter_parameter:int):
+        return self._make_cursor(q.QUERY_BUSCAR,(f"%{ID_task_to_search}%",f"%{name_task_to_search}%",filter_check,filter_parameter),True)
         
     def añadir_tarea(self,name_task_add:str,date_task_add:str):
         return self._make_cursor(q.QUERY_ANADIR,(name_task_add,date_task_add))            
     
-    def ver_tareas(self):
-        return self._make_cursor(q.QUERY_SELECCIONAR,fetch=True)
-    
-    def eliminar_tarea(self, task_to_eliiminated):
-        return self._make_cursor(q.QUERY_ELIMINAR,(str(task_to_eliiminated[0][0]),))
+    def eliminar_tarea(self, task_to_eliiminated:int):
+        return self._make_cursor(q.QUERY_ELIMINAR,(task_to_eliiminated,))
     
     def notified_tasks(self,evento_parar:threading.Event):
         while not evento_parar.is_set():

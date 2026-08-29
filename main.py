@@ -1,5 +1,6 @@
 import flet as ft
 import datetime
+from backend import ToDoList
 
 class ToDoListApp:
     def __init__(self,page:ft.Page):
@@ -7,6 +8,8 @@ class ToDoListApp:
         self._setup_page()
         self._create_components()
         self._create_ui()
+        self._show_all_task()
+        self._change_add_task_date_label()
 
     def _setup_page(self):
         self.page.title = "Lista De Tareas"
@@ -54,7 +57,7 @@ class ToDoListApp:
             bgcolor="#29363F",
             label_style=ft.TextStyle(color="#88ABD4",weight=ft.FontWeight.BOLD),
             text_style=ft.TextStyle(color="#88ABD4",weight=ft.FontWeight.BOLD),
-            on_change=lambda _: print("El texto cambio"),
+            on_change=self._show_all_task,
             border_radius=15,
             height= 46,
             icon=ft.Icon(ft.Icons.SEARCH_ROUNDED,color=ft.Colors.BLUE_300),
@@ -81,7 +84,7 @@ class ToDoListApp:
                 shape=ft.RoundedRectangleBorder(radius=10),
                 side=ft.BorderSide(color="#1a5553"),
             ),
-            on_click=self._close_app
+            on_click=self._close_app_gui
         )
         
         self.btn_second_plane = ft.Button(ft.Row([
@@ -97,29 +100,12 @@ class ToDoListApp:
             on_click=self._second_plane_app,
             
         )
-        
-        self.task_for_view =  ft.Container(
-            ft.Row([
-                ft.Text("TaskID. Título De La Tarea",color="#88ABD4",weight=ft.FontWeight.BOLD),
-                ft.Container(expand=True),
-                ft.Text("12:30 01/01/26",color="#88ABD4",weight=ft.FontWeight.BOLD),
-                ft.IconButton(ft.Icon(ft.Icons.DELETE_ROUNDED,color=ft.Colors.BLUE_300),width=110),
-                ],
-            margin=2,
-            ),
-            bgcolor="#1B262E",
-            expand=True,
-            padding=ft.Padding.only(left=10,right=20),
-            shadow=ft.BoxShadow(spread_radius=2,blur_radius=2),
-            ink=True,
-            on_click=lambda _:print("Se presiono")
-        )
 
         self.task_detail_taskid = ft.Text("• TaskID",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)
         self.task_detail_title = ft.Text("• Title Task",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)
         self.task_detail_date = ft.Text("• 12:30 01/01/26",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)
 
-        self.add_task_label_date= ft.Text("• 12:30 01/01/26",weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)        
+        self.add_task_label_date= ft.Text(weight=ft.FontWeight.BOLD,color="#88ABD4",size=16)        
         self.add_task_name = ft.TextField(
             label="Nombre De La Tarea",
             focused_border_color="#1a5553",
@@ -139,14 +125,18 @@ class ToDoListApp:
             field_label_text="Fecha De La Tarea",
             error_invalid_text="Esta Fecha Ya Ha Pasado",
             error_format_text="Formato De Fecha Ivalido",
+            on_change=self._change_add_task_date_label,
+            value=datetime.datetime.today()
             )
         self.add_task_time = ft.TimePicker(
+            value=datetime.datetime.now().time(),
             help_text="Ingresa Una Hora",
             cancel_text="Cancelar",
             confirm_text="Aceptar",
             error_invalid_text="Coloca Una Hora Valida",
             hour_label_text="Hora(s)",
-            minute_label_text="Minuto(s)"
+            minute_label_text="Minuto(s)",
+            on_change=self._change_add_task_date_label
             )
         
         self.btn_complete_task = ft.Button(
@@ -191,13 +181,25 @@ class ToDoListApp:
             )
         )
 
+        self.list_view_tasks = ft.ListView(
+            controls=[],
+            padding=ft.Padding.only(top=10,left=5,right=5,bottom=30),
+            width=650,
+            height=280,
+            scroll=ft.Scrollbar(thumb_visibility=True,thickness=10),
+            spacing=8,
+        )
+
     def _second_plane_app(self):
         #TERMINAR FUNCIONALIDAD 
         print("Segundo Plano")
         
-    async def _close_app(self):
+    async def _close_app_gui(self):
         #TERMINAR FUNCIONALIDAD
         await self.page.window.close()
+
+    def _change_add_task_date_label(self):
+        self.add_task_label_date.value = "• "+self.add_task_date.value.strftime("%d/%m/%Y")+" "+self.add_task_time.value.strftime("%H:%M")
 
     def _change_value_menu_items(self,e:ft.Event[ft.PopupMenuItem]):
         e.control.checked = not e.control.checked
@@ -206,6 +208,47 @@ class ToDoListApp:
             e.control.checked = True
             selected_filters = [e.control.content.value]
         self.filter_text.value = f"Filtrar por: {", ".join(selected_filters)}"
+        self._show_all_task()
+        self.page.update()
+
+    def _add_task(self):
+        if not self.add_task_name.value:
+            return
+        to_do_list_backend.añadir_tarea(self.add_task_name.value.strip(),self.add_task_date.value.strftime("%Y-%m-%d ")+self.add_task_time.value.strftime("%H:%M"))
+        self.show_all_task()
+
+    def _change_task_detail(self,e:ft.ControlEvent):
+        self.task_detail_taskid.value = "• "+str(e.control.content.controls[0].value)
+        self.task_detail_title.value = "• "+e.control.content.controls[1].value
+        self.task_detail_date.value = "• "+e.control.content.controls[3].value
+
+    def delete_task(self,e:ft.ControlEvent):
+        to_do_list_backend.eliminar_tarea(e.control.parent.controls[0].value)
+        self._show_all_task()
+
+    def _show_all_task(self):
+        filter_parameter = 1 if self.menu_filter_items["completed"].checked and not self.menu_filter_items["pending"].checked else 0
+        filter_parameter_checked = None if self.menu_filter_items["completed"].checked == self.menu_filter_items["pending"].checked else 0
+        tasks_for_view = []
+        for task in to_do_list_backend.buscar_tarea(self.search_bar.value,self.search_bar.value,filter_parameter_checked,filter_parameter):
+            tasks_for_view.append(ft.Container(
+                ft.Row([
+                    ft.Text(task[0],color="#88ABD4",weight=ft.FontWeight.BOLD),
+                    ft.Text(f"- {task[1]}",color="#88ABD4",weight=ft.FontWeight.BOLD),
+                    ft.Container(expand=True),
+                    ft.Text(task[2],color="#88ABD4",weight=ft.FontWeight.BOLD),
+                    ft.IconButton(ft.Icon(ft.Icons.DELETE_ROUNDED,color=ft.Colors.BLUE_300),width=110,on_click=self.delete_task),
+                    ],
+                margin=2,
+                ),
+                bgcolor="#1B262E",
+                expand=True,
+                padding=ft.Padding.only(left=10,right=20),
+                shadow=ft.BoxShadow(spread_radius=2,blur_radius=2),
+                ink=True,
+                on_click=self._change_task_detail,
+            ))
+        self.list_view_tasks.controls = tasks_for_view
         self.page.update()
 
     def _create_ui(self):
@@ -257,6 +300,7 @@ class ToDoListApp:
                                     shape=ft.RoundedRectangleBorder(radius=10),
                                     side=ft.BorderSide(color="#1a5553"),
                                 ),
+                                on_click=self._add_task,
                             ),
                             ft.Button(  
                                 ft.Row([
@@ -291,14 +335,7 @@ class ToDoListApp:
         )
         
         task_view_all_card = ft.Container(
-            ft.ListView(
-                controls=[self.task_for_view for i in range(60)],
-                padding=ft.Padding.only(top=10,left=5,right=5,bottom=30),
-                width=650,
-                height=280,
-                scroll=ft.Scrollbar(thumb_visibility=True,thickness=10),
-                spacing=8,
-            ),
+            self.list_view_tasks,
             bgcolor="#29363F",
             shadow=ft.BoxShadow(spread_radius=2,blur_radius=2,color="#1a5553")
         )
@@ -367,7 +404,8 @@ class ToDoListApp:
                 expand=True
             ),
         )
-            
+
+to_do_list_backend = ToDoList()
 
 def main(page:ft.Page):
     app = ToDoListApp(page)

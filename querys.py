@@ -1,7 +1,8 @@
-#Tareas Enteras
-QUERY_SELECCIONAR = "SELECT * FROM Task"
 #Busca Tarea Por ID
-QUERY_BUSCAR = "SELECT * FROM Task WHERE TaskID = ?"
+QUERY_BUSCAR = """SELECT * FROM Task WHERE (TaskID LIKE ? OR Name LIKE ?) 
+AND (? IS NULL OR Notified = ?)
+ORDER BY Date DESC
+"""
 #Eliminar Tarea Por ID
 QUERY_ELIMINAR = "DELETE FROM Task WHERE TaskID = ?"
 #Añadir Tarea A La Tabla
