@@ -1,5 +1,5 @@
 # Database of app
-Recordatorio.db
+data/data.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -219,3 +219,4 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+data/data.db
