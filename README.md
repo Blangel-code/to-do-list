@@ -26,11 +26,9 @@ La estructura principal del proyecto está separada en tres capas: acceso a dato
 
 Dependencias habituales (pueden variar, mira `requirements.txt`):
 - flet
-- sqlite3 (módulo estándar de Python)
-- plyer (notificaciones multiplataforma)
-- win10toast (notificaciones en Windows)
-- pystray (soporte de bandeja del sistema)
-- python-dateutil (manejo de fechas)
+- pystray
+- winotify
+- Pillow
 
 ## Instalación
 
@@ -94,4 +92,4 @@ Se agradecen pruebas automatizadas y documentación de las nuevas funciones.
 
 Hecho por: Blangel-code
 
-Licencia: Este proyecto está bajo la licencia MIT. Si deseas el texto completo de la licencia, añade un archivo `LICENSE` con el contenido de la MIT o consulta https://opensource.org/licenses/MIT
+Licencia: Este proyecto está bajo la licencia MIT. Si deseas el texto completo de la licencia, entra al  archivo `LICENSE` con el contenido de la MIT o consulta https://opensource.org/licenses/MIT
