@@ -1,31 +1,35 @@
 # to-do-list
 
-Archivo: requirements.txt incluido en la raíz del proyecto.
-
-Una lista de tareas que funciona mediante consola, se ejecuta en segundo plano y envía notificaciones al escritorio.
+Aplicación de escritorio para gestionar tareas, desarrollada en Python. Proporciona una interfaz gráfica con Flet, almacenamiento mediante SQLite, ejecución en segundo plano (bandeja del sistema) y notificaciones nativas del sistema operativo.
 
 ## Descripción
 
-Aplicación de línea de comandos escrita en Python para gestionar tareas. Permite crear, listar y marcar tareas como completadas desde la terminal; está pensada para ejecutarse en segundo plano (por ejemplo, como servicio/daemon) y enviar notificaciones de escritorio cuando sea necesario (nuevas tareas, recordatorios o tareas vencidas).
+Esta es una aplicación modular para crear, editar, buscar y organizar tareas. Está pensada para usarse en Windows (interfaz Flet) pero es portable a otros sistemas con pequeñas adaptaciones para las notificaciones y la bandeja del sistema.
 
-## Características
+La estructura principal del proyecto está separada en tres capas: acceso a datos (`querys.py`), lógica de negocio y servicios (`backend.py`) y la interfaz de usuario (`main.py`) construida con Flet.
 
-- Interfaz por consola (CLI) ligera y fácil de usar.
-- Ejecución en segundo plano para monitorizar tareas continuamente.
-- Notificaciones de escritorio para avisos y recordatorios.
-- Almacenamiento simple (archivo local o base de datos ligera); revisa el código para detalles sobre persistencia.
-- Para salir de la aplición escribir en la "salir" en la línea de comandos
+## Características nuevas y principales
+
+- Interfaz gráfica de usuario (GUI) construida con Flet.
+- CRUD completo: crear, leer, actualizar y eliminar tareas.
+- Búsqueda en tiempo real y filtrado por estado (Pendientes, Completadas, Todas).
+- Persistencia con SQLite (archivo local `tasks.db` o similar).
+- Notificaciones nativas del sistema (Windows/Linux/macOS) para recordatorios y tareas vencidas.
+- Ejecución en segundo plano / bandeja del sistema para mantener la aplicación activa sin ocupar la pantalla.
+- Diseño modular (separación: `querys.py`, `backend.py`, `main.py`) para facilitar mantenimiento y extensiones.
+- Soporte básico multiplataforma para notificaciones (bibliotecas alternativas según SO).
 
 ## Requisitos
 
-- Python 3.7 o superior.
-- El repositorio incluye un archivo `requirements.txt` en la raíz con las dependencias necesarias para notificaciones y utilidades. Asegúrate de revisar ese archivo antes de la instalación.
+- Python 3.8 o superior.
+- Archivo `requirements.txt` en la raíz con las dependencias necesarias. Revisa su contenido antes de la instalación.
 
-Dependencias listadas en `requirements.txt`:
-- notify2 (Linux)
-- plyer (multiplataforma)
-- win10toast (Windows)
-- click (helpers para CLI)
+Dependencias habituales (pueden variar, mira `requirements.txt`):
+- flet
+- sqlite3 (módulo estándar de Python)
+- plyer (notificaciones multiplataforma)
+- win10toast (notificaciones en Windows)
+- pystray (soporte de bandeja del sistema)
 - python-dateutil (manejo de fechas)
 
 ## Instalación
@@ -41,47 +45,53 @@ Dependencias listadas en `requirements.txt`:
    source .venv/bin/activate  # Linux/macOS
    .venv\Scripts\activate    # Windows
 
-3. Instala las dependencias desde el archivo `requirements.txt` que se encuentra en la raíz del proyecto:
+3. Instala las dependencias desde `requirements.txt`:
 
    pip install -r requirements.txt
 
-Si por alguna razón necesitas instalar solo dependencias específicas, abre `requirements.txt` y usa `pip install <paquete>` para instalarlas individualmente.
+Si necesitas instalar paquetes individuales: `pip install <paquete>`.
 
 ## Uso
 
-Ejecuta la aplicación desde la terminal. La forma exacta de uso depende del CLI implementado en el proyecto; ejemplos generales:
+- Ejecutar la interfaz gráfica (ejemplo):
 
-- Ejecutar en primer plano:
+  python main.py
 
-  python Tareas.py
+  o, si tu instalación de Flet requiere el runner:
 
-Para un uso en producción considera crear un servicio systemd (Linux) o una tarea programada/servicio en Windows.
+  flet run main.py
 
-Revisa el código para conocer los comandos disponibles y las opciones del CLI.
+- La aplicación muestra la lista de tareas, permite crear nuevas, editar existentes, marcarlas como completadas y filtrarlas.
+- Para ejecutar la aplicación en segundo plano en Windows, la aplicación soporta minimización a la bandeja del sistema; consulta la implementación en `main.py` y `backend.py`.
 
-## Notificaciones de escritorio
+## Notificaciones y segundo plano
 
-La aplicación envía notificaciones cuando hay eventos relevantes (nueva tarea, recordatorio, tarea vencida).
+- La lógica de notificaciones y ejecución en segundo plano está centralizada en `backend.py`.
+- En Windows se usan `win10toast` o `plyer` para mostrar notificaciones nativas.
+- En Linux `notify2` o `plyer` pueden emplearse; en macOS puede usarse `osascript` o adaptadores compatibles.
+- Asegúrate de tener las dependencias necesarias instaladas para tu SO.
 
-- En Linux: `notify-send` o bibliotecas como `notify2`/`plyer`.
-- En macOS: `osascript` o bibliotecas que usen las notificaciones nativas.
-- En Windows: `win10toast` o `plyer`.
+## Estructura del proyecto
 
-Asegúrate de tener instaladas las dependencias necesarias según tu sistema operativo.
+- querys.py  — funciones de acceso a SQLite (creación de tablas y consultas parametrizadas).
+- backend.py — lógica de negocio, validaciones, programación de notificaciones y manejo de segundo plano.
+- main.py    — interfaz de usuario con Flet y handlers de eventos.
+
+Consulta los archivos para ver la API interna y extender funcionalidades.
 
 ## Contribuir
 
-Si quieres contribuir:
+Si quieres contribuir con mejoras, correcciones o nuevas características:
 
 1. Haz fork del repositorio.
 2. Crea una rama: `git checkout -b feature/nombre-feature`.
 3. Realiza tus cambios y haz commit: `git commit -m "Describe tu cambio"`.
-4. Envía un Pull Request describiendo el cambio.
+4. Envía un Pull Request describiendo el cambio y cómo probarlo.
 
-Se agradecen correcciones, mejoras y pruebas automatizadas.
+Se agradecen pruebas automatizadas y documentación de las nuevas funciones.
 
 ---
 
 Hecho por: Blangel-code
 
-Licencia: Este proyecto está bajo la licencia MIT. Si deseas el texto completo de la licencia, añade un archivo `LICENSE` con el contenido de la MIT o consulta `https://opensource.org/licenses/MIT`.
+Licencia: Este proyecto está bajo la licencia MIT. Si deseas el texto completo de la licencia, añade un archivo `LICENSE` con el contenido de la MIT o consulta https://opensource.org/licenses/MIT
